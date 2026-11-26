@@ -28,15 +28,9 @@
 
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23116b5a'/%3E%3Ctext x='50' y='72' font-size='46' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3E%EC%9D%B4%3C/text%3E%3C/svg%3E" />
 
-  <!-- Google Analytics 4 — 도메인 확정 후 측정 ID를 넣고 주석을 해제합니다.
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-XXXXXXXXXX');
-  </script>
-  -->
+  <!-- Google Analytics 4 — 아직 이 사이트 전용 GA4 속성(측정 ID)이 없습니다.
+       발급받으면 이 파일 하단 스크립트의 SITE_CONFIG.ga4에 "G-..." 를 넣으세요.
+       값이 비어 있으면 gtag를 불러오지 않고 클릭 추적도 조용히 건너뜁니다. -->
 
   <!-- Google AdSense (게시자 ID: ca-pub-6878215996562815) -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6878215996562815" crossorigin="anonymous"></script>
@@ -791,7 +785,7 @@
       <li>주택임대차보호법 — 확정일자와 보증금 우선변제</li>
       <li>통신사 약정·할인반환금 — 통신사별 요금 약관과 해지 시 납부 금액 안내</li>
       <li>통신사 인터넷 설치·이전설치(출동)비 — 2026년 11월 기준 평일 인터넷 단독 KT 36,000원·SK브로드밴드/LG U+ 36,300원, 야간·주말 45,000~45,375원(각 사 약관·공지)</li>
-      <li><a href="https://www.100lifeplan.fss.or.kr/" target="_blank" rel="noopener">금융감독원 통합연금포털</a> — 연금계좌 이전·수수료 참고(이사 후 금융 주소 변경)</li>
+      <li><a href="https://www.fss.or.kr/fss/lifeplan/lifeplanIndex/index.do?menuNo=201101" target="_blank" rel="noopener">금융감독원 통합연금포털</a> — 연금계좌 이전·수수료 참고(이사 후 금융 주소 변경)</li>
       <li><a href="https://www.gov.kr/" target="_blank" rel="noopener">정부24</a> — 전입신고·주소변경 온라인 신청</li>
       <li><a href="https://www.epost.go.kr/" target="_blank" rel="noopener">우체국</a> — 우편물 전송(이사) 서비스</li>
     </ul>
@@ -828,6 +822,46 @@
      · 텐핑          : 이사 견적 참여형, 이사일 60일 이내 조건
      placeholder: true 인 동안에는 링크 대신 준비 안내가 뜹니다.
      ══════════════════════════════════════════════════════════ */
+  /* ══════════ 분석(GA4) 설정 ══════════
+     이 사이트 전용 GA4 속성 측정 ID가 발급되면 SITE_CONFIG.ga4 에 넣습니다.
+     비어 있으면 외부 스크립트를 부르지 않고, 클릭 추적은 아무 것도 하지 않습니다. */
+  var SITE_CONFIG = {
+    site: "internet-move-2026",
+    ga4: "",
+    utmCampaign: "partner_cta"
+  };
+
+  function initAnalytics() {
+    if (!SITE_CONFIG.ga4) return;
+    var s = document.createElement("script");
+    s.async = true;
+    s.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(SITE_CONFIG.ga4);
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    window.gtag("js", new Date());
+    window.gtag("config", SITE_CONFIG.ga4, { anonymize_ip: true });
+  }
+
+  function trackEvent(name, params) {
+    if (!window.dataLayer) return;  // 측정 ID가 없으면 쌓지 않습니다
+    var payload = { event: name, site: SITE_CONFIG.site };
+    if (params) for (var k in params) if (Object.prototype.hasOwnProperty.call(params, k)) payload[k] = params[k];
+    window.dataLayer.push(payload);
+  }
+
+  function withUtm(url, content) {
+    if (!url || url === "#") return url;
+    try {
+      var u = new URL(url, location.href);
+      u.searchParams.set("utm_source", SITE_CONFIG.site);
+      u.searchParams.set("utm_medium", "referral");
+      u.searchParams.set("utm_campaign", SITE_CONFIG.utmCampaign);
+      if (content) u.searchParams.set("utm_content", content);
+      return u.toString();
+    } catch (e) { return url; }
+  }
+
   var PARTNERS = {
     ajdang: {
       name: "아정당",
@@ -1105,27 +1139,27 @@
 
     if (r.monthlySave <= 0) {
       big.innerHTML = "없음";
-      sub.innerHTML = "월 절감액이 <strong>" + won(-r.monthlySave) + "원 손해</strong>입니다.";
+      sub.innerHTML = "월 절감액이 <strong>" + won(-r.monthlySave) + " 손해</strong>입니다.";
       verdict.className = "verdict bad";
       verdict.innerHTML = "새 요금이 지금보다 비싸면 아무리 사은품이 커도 <strong>갈아탈수록 손해</strong>입니다. 이전설치로 유지하는 쪽이 낫습니다.";
       notice.hidden = false;
       notice.className = "notice warn";
-      notice.innerHTML = "사은품을 36개월로 나누면 월 " + won(inp.gift / 36) + "원입니다. 월 요금 차이(" + won(-r.monthlySave) + "원)가 이보다 크면 사은품으로도 메울 수 없습니다.";
+      notice.innerHTML = "사은품을 36개월로 나누면 월 " + won(inp.gift / 36) + "입니다. 월 요금 차이(" + won(-r.monthlySave) + ")가 이보다 크면 사은품으로도 메울 수 없습니다.";
     } else if (r.breakEven === 0) {
       big.innerHTML = "바로<small>이득</small>";
-      sub.innerHTML = "초기 차액 <strong>0원 이하</strong> · 월 절감 <strong>" + won(r.monthlySave) + "원</strong>";
+      sub.innerHTML = "초기 차액 <strong>0원 이하</strong> · 월 절감 <strong>" + won(r.monthlySave) + "</strong>";
       verdict.className = "verdict";
-      verdict.innerHTML = "위약금·설치비를 사은품이 덮어서 <strong>첫 달부터 이득</strong>입니다. 36개월 기준 " + won(Math.abs(r.diff36)) + "원 차이입니다.";
+      verdict.innerHTML = "위약금·설치비를 사은품이 덮어서 <strong>첫 달부터 이득</strong>입니다. 36개월 기준 " + won(Math.abs(r.diff36)) + " 차이입니다.";
       notice.hidden = true;
     } else {
       big.innerHTML = r.breakEven + "<small>개월</small>";
-      sub.innerHTML = "초기 차액 <strong>" + won(r.netPremium) + "원</strong> · 월 절감 <strong>" + won(r.monthlySave) + "원</strong>";
+      sub.innerHTML = "초기 차액 <strong>" + won(r.netPremium) + "</strong> · 월 절감 <strong>" + won(r.monthlySave) + "</strong>";
       if (r.diff36 >= 0) {
         verdict.className = "verdict";
-        verdict.innerHTML = "<strong>" + r.breakEven + "개월</strong>만 지나면 갈아타는 쪽이 이득입니다. 36개월 기준 <strong>" + won(r.diff36) + "원</strong> 차이입니다.";
+        verdict.innerHTML = "<strong>" + r.breakEven + "개월</strong>만 지나면 갈아타는 쪽이 이득입니다. 36개월 기준 <strong>" + won(r.diff36) + "</strong> 차이입니다.";
       } else {
         verdict.className = "verdict bad";
-        verdict.innerHTML = "<strong>" + r.breakEven + "개월</strong>이 걸리지만, 36개월로는 <strong>" + won(-r.diff36) + "원 손해</strong>입니다. 사은품이 줄면 더 불리해집니다.";
+        verdict.innerHTML = "<strong>" + r.breakEven + "개월</strong>이 걸리지만, 36개월로는 <strong>" + won(-r.diff36) + " 손해</strong>입니다. 사은품이 줄면 더 불리해집니다.";
       }
       notice.hidden = false;
       notice.className = "notice";
@@ -1178,7 +1212,7 @@
     r.list.forEach(function (q) { if (q.total > r.min) gap = Math.max(gap, q.total - r.min); });
     verdict.className = "verdict";
     verdict.innerHTML = "추가비용까지 넣으면 <strong>" + best + "</strong>가 " + won(r.min) +
-      "원으로 가장 쌉니다." + (gap > 0 ? " 가장 비싼 견적과는 <strong>" + won(gap) + "원</strong> 차이입니다." : "");
+      "으로 가장 쌉니다." + (gap > 0 ? " 가장 비싼 견적과는 <strong>" + won(gap) + "</strong> 차이입니다." : "");
 
     var risky = r.list.filter(function (q) { return q.total > 0 && q.base > 0 && q.extra / q.base >= 0.25; });
     if (risky.length) {
@@ -1239,7 +1273,7 @@
 
     if (r.diff <= 0) {
       big.innerHTML = "포장이 유리";
-      sub.innerHTML = "포장이사 견적이 반포장이사보다 <strong>" + won(-r.diff) + "원</strong> 더 싸거나 같습니다.";
+      sub.innerHTML = "포장이사 견적이 반포장이사보다 <strong>" + won(-r.diff) + "</strong> 더 싸거나 같습니다.";
       verdict.className = "verdict";
       verdict.innerHTML = "이 견적이라면 시간을 따질 필요 없이 <strong>포장이사</strong>를 고르세요. 다만 견적서의 추가비용 항목이 같은지 확인해야 합니다.";
       notice.hidden = true;
@@ -1266,7 +1300,7 @@
     var p = PARTNERS[key];
     if (!p) return "";
     var pending = p.placeholder || !p.url || p.url === "#";
-    return '<a class="cta' + (pending ? " is-pending" : "") + '" href="' + (pending ? "#" : p.url) + '"' +
+    return '<a class="cta' + (pending ? " is-pending" : "") + '" href="' + (pending ? "#" : withUtm(p.url, key)) + '"' +
       (pending ? ' data-pending="1"' : ' target="_blank" rel="noopener sponsored"') +
       ' data-partner="' + key + '">' +
       '<span class="cta-body"><strong>' + p.name + " · " + p.title + '</strong><span>' + p.desc + '</span></span>' +
@@ -1283,6 +1317,11 @@
       var el = $(id);
       if (!el) return;
       el.innerHTML = groups[id].map(ctaHtml).join("");
+    });
+    document.querySelectorAll('.cta:not([data-pending="1"])').forEach(function (a) {
+      a.addEventListener("click", function () {
+        trackEvent("partner_cta_click", { partner: a.getAttribute("data-partner") || "" });
+      });
     });
     document.querySelectorAll('.cta[data-pending="1"]').forEach(function (a) {
       a.addEventListener("click", function (ev) {
@@ -1485,6 +1524,7 @@
   });
   window.addEventListener("beforeprint", buildPrintReport);
 
+  initAnalytics();
   renderCtas();
   renderDday();
   renderSwitch();
@@ -1504,7 +1544,10 @@
     parseAmount: parseAmount,
     buildPrintReport: buildPrintReport,
     ITEMS: ITEMS,
-    version: "2026.1"
+    SITE_CONFIG: SITE_CONFIG,
+    withUtm: withUtm,
+    trackEvent: trackEvent,
+    version: "2026.2"
   };
 })();
 </script>
